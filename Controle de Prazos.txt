@@ -1,0 +1,108 @@
+function onOpen(){
+  AlertaVencimentos();
+}
+
+
+function AlertaVencimentos() {
+
+
+var planilha = SpreadsheetApp.getActiveSpreadsheet();
+var guiadados = planilha.getSheetByName("Agosto/2023");
+
+var linhainicial = 3;
+var colunainicial = 1;
+var totalcolunas = 17;
+var ultimalinha = guiadados.getLastRow() - (linhainicial - 1);
+
+var dados = guiadados.getRange(linhainicial, colunainicial, ultimalinha, totalcolunas).getValues();
+
+var colunadata = 8;
+var colunastatus = 0;
+var colunaentrega = 14;
+
+
+var dataatual = new Date();
+var diasdataatual = Math.ceil(dataatual / (1000 * 3600 * 24));
+
+var dadosrel = [];
+
+
+for(var i = 0; i<dados.length; i++){
+
+           var data = new Date(dados[i][colunadata]);
+           var time = Math.abs(data.getTime());
+           var dias = Math.ceil(time / (1000 * 3600 * 24))
+
+           var dif = parseInt(dias) - parseInt(diasdataatual);
+
+
+            if(dif < 0){
+
+              if(dados[i][colunaentrega] == ""){
+                var venc = (dif) * - 1;
+                dados[i][colunastatus] = "ATRASADO A " + venc + " DIAS";
+                dadosrel.push(dados[i][colunastatus]);
+              }else{
+                dados[i][colunastatus] = "ENTREGUE" ;
+                dadosrel.push(dados[i][colunastatus]);  
+              }
+
+            }
+
+            if(dif == "0.00"){
+
+              if(dados[i][colunaentrega] == ""){              
+                dados[i][colunastatus] = "ATRASA HOJE";
+                dadosrel.push(dados[i][colunastatus]);
+              }else{
+                dados[i][colunastatus] = "ENTREGUE" ;
+                dadosrel.push(dados[i][colunastatus]);  
+              }
+
+            }
+
+              if(dif > 0){
+
+              if(dados[i][colunaentrega] == ""){
+                
+                dados[i][colunastatus] = "FALTAM " + dif + " DIAS";
+                dadosrel.push(dados[i][colunastatus]);
+              }else{
+                dados[i][colunastatus] = "ENTREGUE" ;
+                dadosrel.push(dados[i][colunastatus]);  
+              }
+
+            }
+
+        
+}
+
+if(dadosrel == ""){
+  return;
+}
+
+for(var i = 0; i<dadosrel.length; i++){
+
+
+   var texto = dadosrel[i];
+  var resultado = texto.split(" ");
+
+   if(dadosrel[i] == "ENTREGUE"){
+   guiadados.getRange(i + linhainicial, colunastatus + 1).setValue(dadosrel[i]).setBackground('#6aa84f');
+   }
+
+   if(dadosrel[i] == "ATRASA HOJE"){
+   guiadados.getRange(i + linhainicial, colunastatus + 1).setValue(dadosrel[i]).setBackground('#e69138');
+   }
+
+   if(resultado[0] == "ATRASADO"){
+   guiadados.getRange(i + linhainicial, colunastatus + 1).setValue(dadosrel[i]).setBackground('#cc0000');
+   }
+
+   if(resultado[0] == "FALTAM"){
+   guiadados.getRange(i + linhainicial, colunastatus + 1).setValue(dadosrel[i]).setBackground('#3c78d8');
+   }
+
+}
+
+}
